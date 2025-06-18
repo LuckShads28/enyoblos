@@ -7,9 +7,10 @@ use App\Models\Result;
 use App\Models\Periode;
 use App\Models\Candidate;  
 use App\Mail\InfoPemiraMail;
-use Illuminate\Http\Request; 
-use App\Http\Requests\PeriodeRequest;
 use App\Models\candidatepair;
+use Illuminate\Http\Request; 
+use App\Jobs\SendInfoPemiraEmail;
+use App\Http\Requests\PeriodeRequest;
 use Illuminate\Support\Facades\Mail; 
 
 class CommitteeController extends Controller
@@ -147,7 +148,7 @@ class CommitteeController extends Controller
             'login_email' => $user->email
         ];
 
-        Mail::to($user->email)->send(new InfoPemiraMail($mailData));
+        SendInfoPemiraEmail::dispatch($user, $mailData)->delay(now()->addSeconds(5));
 
         return redirect()->back()->with('success', 'Berhasil mengirim email ke ' . $user->email);
     }
@@ -168,9 +169,36 @@ class CommitteeController extends Controller
                 'login_email' => $user->email
             ];
 
-            Mail::to($user->email)->send(new InfoPemiraMail($mailData));
+             SendInfoPemiraEmail::dispatch($user, $mailData)->delay(now()->addSeconds(5));
         }
 
         return redirect()->back()->with('success', 'Berhasil mengirim email ke semua user');
+    }
+
+    /**
+     * Kirim email ke pengguna yang dipilih
+     */
+    public function sendSelectedEmail(Request $request)
+    {
+        if (!$request->ids || count($request->ids) === 0) {
+            return redirect()->back()->with('error', 'Tidak ada pengguna yang dipilih');
+        }
+
+        $users = $this->user->whereIn('id', $request->ids)->get();
+        $totalUsers = $users->count();
+
+        foreach ($users as $user) {
+            $mailData = [
+                'title' => 'PEMIRA Kahima 2024',
+                'body' => 'Informasi mengenai kahima baru tahun 2024',
+                'nama' => $user->name,
+                'default_password' => $user->nim . '_pemira2024',
+                'login_email' => $user->email
+            ];
+
+            SendInfoPemiraEmail::dispatch($user, $mailData)->delay(now()->addSeconds(5));
+        }
+
+        return redirect()->back()->with('success', 'Berhasil mengirim email ke ' . $totalUsers . ' pengguna terpilih');
     }
 }

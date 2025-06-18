@@ -29,8 +29,8 @@ Route::middleware('auth')->group(function () {
 Route::middleware(['auth', 'role:user'])->group(function () {
     Route::get('/home', [HomeController::class, 'userHome'])->name('user_home');
     Route::post('/vote/{idKandidat}', [CandidatController::class, 'vote'])->name('vote_kandidat');
-    // Route::get('/daftar', [CandidatController::class, 'create'])->name('daftar_kandidat_form');
-    // Route::post('/daftar', [CandidatController::class, 'store'])->name('daftar_kandidat_post');
+    Route::get('/daftar', [CandidatController::class, 'create'])->name('daftar_kandidat_form');
+    Route::post('/daftar', [CandidatController::class, 'store'])->name('daftar_kandidat_post');
 });
 
 // Panitia
@@ -51,6 +51,7 @@ Route::middleware(['auth', 'role:panitia,master'])->group(function () {
     Route::get('/get-data-pemilihan', [CommitteeController::class, 'getDataElection'])->name('get_data_pemilihan');
     Route::get('/kirim-email/{id}', [CommitteeController::class, 'sendEmail'])->name('kirim_email_user');
     Route::get('/kirim-email-all', [CommitteeController::class, 'sendAllEmail'])->name('kirim_email_all');
+    Route::post('/kirim-email-selected', [CommitteeController::class, 'sendSelectedEmail'])->name('kirim_email_selected');
 });
 
 // Master

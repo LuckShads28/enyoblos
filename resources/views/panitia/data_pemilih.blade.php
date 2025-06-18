@@ -26,6 +26,7 @@
                     <a href="#" class="btn btn-primary" data-toggle="modal" data-target="#importPemilihModal">Import
                         Data</a>
                     <a href="{{ route('kirim_email_all') }}" class="btn btn-primary">Kirim Email Semua User</a>
+                    <button type="button" class="btn btn-success" id="kirimEmailTerpilih">Kirim Email Terpilih</button>
                     <button type="submit" class="btn btn-danger" form="dataPemilihForm">Hapus Terpilih</button>
                     <a href="{{ route('panitia.download_template_pemilih') }}" class="btn btn-warning">Template
                         Import</a>
@@ -132,14 +133,52 @@
             // Select All Script
             $('#selectAll').click(function(event) {
                 if (this.checked) {
-                    // Iterate each checkbox
-                    $(':checkbox').each(function() {
+                    // Iterate each checkbox with name="ids[]"
+                    $('input[name="ids[]"]').each(function() {
                         this.checked = true;
                     });
                 } else {
-                    $(':checkbox').each(function() {
+                    $('input[name="ids[]"]').each(function() {
                         this.checked = false;
                     });
+                }
+            });
+
+            // Kirim Email Terpilih Script
+            $('#kirimEmailTerpilih').click(function() {
+                var selectedIds = [];
+                $('input[name="ids[]"]:checked').each(function() {
+                    selectedIds.push($(this).val());
+                });
+
+                if (selectedIds.length === 0) {
+                    alert('Pilih minimal 1 pengguna untuk mengirim email.');
+                    return;
+                }
+
+                if (confirm('Apakah Anda yakin ingin mengirim email ke ' + selectedIds.length + ' pengguna terpilih?')) {
+                    // Create form and submit
+                    var form = $('<form>', {
+                        'method': 'POST',
+                        'action': '{{ route("kirim_email_selected") }}'
+                    });
+                    
+                    form.append($('<input>', {
+                        'type': 'hidden',
+                        'name': '_token',
+                        'value': '{{ csrf_token() }}'
+                    }));
+
+                    $.each(selectedIds, function(index, value) {
+                        form.append($('<input>', {
+                            'type': 'hidden',
+                            'name': 'ids[]',
+                            'value': value
+                        }));
+                    });
+
+                    $('body').append(form);
+                    form.submit();
                 }
             });
         </script>

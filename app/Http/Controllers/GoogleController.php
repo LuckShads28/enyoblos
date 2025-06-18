@@ -16,24 +16,32 @@ class GoogleController extends Controller
 
     public function handleGoogleCallback()
     {
-        $user = Socialite::driver('google')->user();
+        try {
 
-        $findUserGoogleId = User::where('google_id', $user->getId())->first();
+            $user = Socialite::driver('google')->user(); 
 
-        if ($findUserGoogleId) {
-            Auth::login($findUserGoogleId);
-            return redirect()->intended('home');
+            $findUserGoogleId = User::where('google_id', $user->getId())->first();
+
+            if ($findUserGoogleId) {
+                Auth::login($findUserGoogleId);
+                return redirect()->intended('home');
+            }
+
+            $findUserEmail = User::where('email', $user->getEmail())->first();
+            if ($findUserEmail) {
+                Auth::login($findUserEmail);
+                $findUserEmail->update([
+                    'google_id' => $user->getId()
+                ]);
+                return redirect()->intended('home');
+            }
+
+             return redirect()->route('login')->withErrors('Akun tidak ditemukan.');
+
+        } catch (\Throwable $th) {
+
+             return redirect()->route('login')->withErrors('Akun tidak ditemukan.');
+
         }
-
-        $findUserEmail = User::where('email', $user->getEmail())->first();
-        if ($findUserEmail) {
-            Auth::login($findUserEmail);
-            $findUserEmail->update([
-                'google_id' => $user->getId()
-            ]);
-            return redirect()->intended('home');
-        }
-
-        return back()->withErrors('Akun tidak ditemukan.');
     }
 }
